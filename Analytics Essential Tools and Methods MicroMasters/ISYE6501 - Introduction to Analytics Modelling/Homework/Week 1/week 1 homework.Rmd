@@ -1,0 +1,327 @@
+---
+title: "Week 1 homework"
+output: html_notebook
+---
+
+Question 2.1
+
+Question 2.2
+
+```{r}
+# import relevant libraries
+library(kernlab)
+library(kknn)
+```
+
+```{r}
+# load data
+df = read.delim('week 1 data-summer/data 2.2/credit_card_data-headers.txt')
+head(dataframe, 5)
+```
+
+Loop over different values of C using orders of magnitude from -5 to 10.
+
+For each value of C, store the corresponding accuracy score in a vector.
+
+```{r}
+# looping over values of C
+exps <- c(-25:25)
+c_vals <- 10^(-25:25)
+accuracy_vector <- vector("numeric")
+
+# build a svm for every value of C
+for(c in c_vals) {
+  model <- ksvm(as.matrix(df[, 1:10]),
+                as.factor(df[, 11]),
+                type = "C-svc",
+                kernel = "vanilladot",
+                C = c,
+                scaled=TRUE)
+  
+  pred <- predict(model, df[,1:10])
+  accuracy <- sum(pred == df[, 11]) / nrow(df)
+  accuracy_vector <- c(accuracy_vector, accuracy)
+}
+```
+
+```{r}
+# plotting accuracy against values of C
+plot(exps, accuracy_vector)
+```
+
+```{r}
+# best accuracy
+max(accuracy_vector)
+```
+
+```{r}
+# first index for highest accuracy
+which.max(accuracy_vector)
+```
+
+Exponents for the highest accuracy ranges from -2 to 2. Use the first index, -2, and set C=10e-2 for convenience.\
+
+Refit the model with the selected C value.
+
+```{r}
+# build new svm with C=10e-2
+model <- ksvm(as.matrix(df[, 1:10]),
+              as.factor(df[, 11]),
+              type = "C-svc",
+              kernel = "vanilladot",
+              C = 0.01,
+              scaled=TRUE)
+```
+
+```{r}
+# calculate coeffs
+a <- colSums(model@xmatrix[[1]] * model@coef[[1]])
+a
+```
+
+```{r}
+# calculate intercept
+a0 <- -model@b
+a0
+```
+
+Classifier Equation:
+
+$$
+0 = -0.0001500738x_{1}-0.0014818294x_{2}+0.0014083130x_{3}+0.0072863886x_{4}+0.9916470037x_{5}-0.0044661236x_{6}+0.0071482899x_{7}-0.0005468386x_{8}-0.0016930578x_{9}+0.1054824270x_{10}+0.08198854
+$$
+
+```{r}
+# viewing predictions
+pred <- predict(model,df[,1:10])
+pred
+```
+
+Q2.3
+
+```{r}
+# build a knn model
+pred <- rep(0, nrow(df)) #vector of all 0's the size of our dataset that will be filled with 1's & 0's our prediction based from our model
+accuracy_vector <- vector("numeric") 
+
+# loop over values of k
+# build knn model for each value of k
+for (K in 1:50) {
+  for (i in 1:nrow(df)) {
+    model <- kknn(formula = df[-i,11]~.,
+                  df[-i,1:10], #train
+                  df[i,1:10],  #test
+                  k = K, 
+                  scale = TRUE)
+    pred[i] <- round(fitted(model))
+    accuracy <- sum(pred == df[,11]) / nrow(df)
+  }
+  accuracy_vector <- c(accuracy_vector,accuracy)
+}
+```
+
+```{r}
+# plotting accuracy against values of k
+plot(accuracy_vector)
+```
+
+```{r}
+# highest accuracy
+max(accuracy_vector)
+```
+
+```{r}
+# best value of k
+which.max(accuracy_vector)
+```
+
+Best value of k is 12, with an accuracy of 0.853211.
+
+Q 3.1a
+
+```{r}
+# cross validation
+accuracy_vector = vector("numeric")
+for (K in 1:50) {
+  kmodel3 <- cv.kknn(R1 ~ .,
+                     df,
+                     kcv = 10, # num of folds
+                     k = K, 
+                     kernel = "optimal",
+                     scale = TRUE)
+  kmodel3 <- data.frame(kmodel3) 
+  kmodelpred2 <- kmodel3[,2] # preds in 2nd col
+  rpred2 <- round(kmodelpred2) # round to 1 or 0
+  accuracy <- sum(rpred2 == df[,11]) / nrow(df) 
+  accuracy_vector <- c(accuracy_vector, accuracy) 
+}
+plot(accuracy_vector)
+```
+
+```{r}
+# max accuracy
+max(accuracy_vector)
+```
+
+```{r}
+# best value of k
+which.max(accuracy_vector)
+```
+
+```{r}
+# with cross validation
+set.seed(3)
+
+kmodel <- train.kknn(V11 ~.,
+                     ccdata,
+                     kmax = 100,
+                     kernel = "optimal",
+                     scale = TRUE)
+
+kpred <- predict(kmodel, ccdata)
+roundedpred <- round(kpred)
+k_accuracy <- sum(roundedpred == ccdata[,11])/ nrow(ccdata)
+k_accuracy
+```
+
+```{r}
+kmodel
+```
+
+Q3.1b
+
+with svm
+
+```{r}
+set.seed(3)
+#Splitting data into 70% training, 15% validation, and 15% testin
+ccdatasplit <- sample(1:3, nrow(ccdata), prob = c(.7,.15,.15), replace = TRUE)
+cctrain <- ccdata[ccdatasplit == 1,]
+ccvalid <- ccdata[ccdatasplit == 2,]
+cctest <- ccdata[ccdatasplit == 3,]
+
+#Training KSVM Model using our previous code to find the C value that has the lowest training error on our training set.
+Cloop <- 10^(-3:3)
+ksvm_acc_vec <- vector("numeric")
+for(lambda in Cloop) {
+  ksvm_model <- ksvm(as.matrix(cctrain[,1:10]),
+                as.factor(cctrain[,11]),
+                type = "C-svc",
+                kernel = "vanilladot",
+                C = lambda,
+                scaled=TRUE)
+  a <- colSums(ksvm_model@xmatrix[[1]] * ksvm_model@coef[[1]])
+  a0 <- -ksvm_model@b
+  prediction <- predict(ksvm_model,cctrain[,1:10])
+  ksvm_acc <- sum(prediction == cctrain[,11]) / nrow(cctrain)
+  ksvm_acc_vec <- c(ksvm_acc_vec,ksvm_acc)
+}
+```
+
+```{r}
+ksvm_acc_vec
+```
+
+```{r}
+set.seed(3)
+ksvm_model2 <- ksvm(as.matrix(cctrain[,1:10]), #train on training set
+                as.factor(cctrain[,11]),
+                type = "C-svc",
+                kernel = "vanilladot",
+                C = 100,
+                scaled=TRUE)
+```
+
+```{r}
+ksvm_prediction_valid <- predict(ksvm_model2, ccvalid[,1:10]) #predicting how the model will do on our validation set's predictors.
+ksvm.acc <- sum(ksvm_prediction_valid == ccvalid[,11]) / nrow(ccvalid)
+ksvm.acc # 87.75% accurate!
+```
+
+```{r}
+#Validating KSVM Model 
+set.seed(3)
+ksvm_model_valid <- ksvm(as.matrix(ccvalid[,1:10]),
+                as.factor(ccvalid[,11]),
+                type = "C-svc",
+                kernel = "vanilladot",
+                C = 100,
+                scaled=TRUE)
+```
+
+```{r}
+ksvm_model_valid
+```
+
+```{r}
+1-.122449
+```
+
+with knn
+
+```{r}
+set.seed(3)
+#Finding best K on the training set by iterating through different values of K. The K with the highest accuracy will be used for our kknn model that uses validation dataset.
+
+knn_pred2 <- rep(0, nrow(cctrain)) 
+knn_acc_vector2 <- vector("numeric") 
+for (K in 1:50) { 
+  for (i in 1:nrow(cctrain)) {
+    knn_model2 <- kknn(cctrain[-i,11]~.,  
+                      cctrain[-i,1:10], 
+                      cctrain[i,1:10], 
+                      k = K, 
+                      kernel = "optimal",
+                      scale = TRUE)
+    knn_pred2[i] <- round(fitted(knn_model2)) 
+    knn_acc2 <- sum(knn_pred2 == cctrain[,11]) / nrow(cctrain) 
+    
+
+  }
+  knn_acc_vector2 <- c(knn_acc_vector2,knn_acc2) 
+}
+
+plot(knn_acc_vector2)
+```
+
+```{r}
+max(knn_acc_vector2) 
+```
+
+```{r}
+which.max(knn_acc_vector2)
+```
+
+```{r}
+set.seed(3)
+
+knn_pred3 <- rep(0, nrow(ccvalid)) 
+knn_acc_vector3 <- vector("numeric")
+for (i in 1:nrow(ccvalid)) {
+  knn_model3 <- kknn(ccvalid[-i,11]~.,  
+                    ccvalid[-i,1:10], 
+                    ccvalid[i,1:10], 
+                    k = 10, 
+                    kernel = "optimal",
+                    scale = TRUE)
+  knn_pred3[i] <- round(predict(knn_model3))
+  knn.acc = sum(knn_pred3 == ccvalid[,11])/ nrow(ccvalid)
+  
+
+  
+ 
+}
+
+knn.acc # 85.7% accurate witht he validation set
+```
+
+```{r}
+set.seed(3)
+ksvm_prediction_test <- predict(ksvm_model2, cctest[,1:10])
+ksvm.acc2 <- sum(ksvm_prediction_test == cctest[,11]) / nrow(cctest)
+ksvm.acc2 # 82.07% accurate on the test set!
+```
+
+##Conclusion
+
+The KSVM model is a better model for our data due to its higher performance on the validation set compared to KNN. Using our KSVM model on the test set, our model is accurate about 82.07% of the time, down from the 87.11% accuracy we observed on the training set.
