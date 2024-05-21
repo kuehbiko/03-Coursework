@@ -1,21 +1,23 @@
 ---
-title: "Week 1 homework"
-output: html_notebook
+title: "Week-1-homework"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
 ---
 
 **Question 2.1** **Describe a situation or problem from your job, everyday life, current events, etc., for which a classification model would be appropriate. List some (up to 5) predictors that you might use.**
 
 The stars have to align for me to actually do my homework so let's use a classifier to predict how likely it is that I will be working on my homework for any given day.
 
-The question that the classifier answers: Will I be doing my homework today? (yes/no)
-
 Some possible predictors:
 
-1.  Did I wake up before 11am?
-2.  Number of days that I have worked in a row? at a low number, it's harder to start. at a high number, there is a possibility of burnout setting in. (working day streak)
-3.  Have I eaten today? yes - possibly higher chance of me working becuase i am not tired and grumpy
-
-I think 5 predictors is not nearly enough to classify a day as a "homework day" or a "video game day", but there you have it.
+1.  Woke up before 11am (Yes/No)
+2.  Longest streak of working days (Range of positive integers)
+3.  Eaten lunch (Yes/No)
+4.  Number of homework questions remaining (Range of positive integers)
+5.  Weekend (Yes/No)
 
 **Question 2.2**
 
@@ -30,7 +32,7 @@ library(kknn)
 ```{r}
 # load data
 df = read.delim('week 1 data-summer/data 2.2/credit_card_data-headers.txt')
-head(dataframe, 5)
+#head(dataframe, 5)
 ```
 
 **Question 2.2 Part 1**
@@ -39,9 +41,9 @@ head(dataframe, 5)
 
 For this question, we will be using the `ksvm` function in `kernlab` to classify the full credit card dataset.
 
-First, we will want to find the optimal value of the regularization parameter `C`. In SVM, `C` is the parameter that controls the trade-off between maximizing the margin and minimizing the classification error [[1](https://www.analyticsvidhya.com/blog/2021/04/insight-into-svm-support-vector-machine-along-with-code/#:~:text=It%20introduces%20a%20regularization%20parameter,leading%20to%20a%20narrower%20margin.)]. A smaller value of C results in a larger margin [[2](https://medium.com/@pushkarmandot/what-is-the-significance-of-c-value-in-support-vector-machine-28224e852c5a)]. To tie this back in with the module 2 lectures, the parameter `C` is similar to the term $\lambda$.
+First, we will want to find the optimal value of the regularization parameter `C`. In SVM, `C` is the parameter that controls the trade-off between maximizing the margin and minimizing the classification error. A higher value of C allows for more flexibility in the decision boundary, potentially leading to overfitting, while a lower value of C imposes a smoother decision boundary and may lead to underfitting. To tie this back in with the module 2 lectures, the parameter `C` is similar to $\lambda$, but not the exact same coefficient.
 
-To find this optimal value of C, we will loop over a range of values starting from 10e\^{-25} to 10e\^{25}. For each value of C, we construct an SVM model and calculate the corresponding accuracy, which is the ratio of the number of *correct* predictions to the total number of predictions. Then store each accuracy in a vector `accuracy_vector`.
+To find this optimal value of `C`, we will loop over a range of values starting from 10e-25 to 10e25. For each value of `C`, we construct an SVM model and calculate the corresponding accuracy, which represents the ratio of the number of *correct* predictions to the *total* number of predictions. Then store each accuracy in a vector `accuracy_vector`.
 
 We will use accuracy as the metric to determine the best classifier and thus the best value of C.
 
@@ -52,6 +54,7 @@ c_vals <- 10^(-25:25)
 accuracy_vector <- vector("numeric")
 
 # build a svm for every value of C
+set.seed(42)
 for(c in c_vals) {
   model <- ksvm(as.matrix(df[, 1:10]),
                 as.factor(df[, 11]),
@@ -60,8 +63,11 @@ for(c in c_vals) {
                 C=c,
                 scaled=T)
   
+  # get inidividual predictions
   pred <- predict(model, df[,1:10])
+  # calculate accuracy of SVM model
   accuracy <- sum(pred == df[, 11]) / nrow(df)
+  # store accuracy in accuracy vector
   accuracy_vector <- c(accuracy_vector, accuracy)
 }
 ```
@@ -75,7 +81,7 @@ plot(logC, accuracy_vector,
      ylab="Accuracy")
 ```
 
-Use the `max()` function to find the highest accuracy in the vector.
+Use the `max()` function to find the highest accuracy in `accuracy_vector`.
 
 ```{r}
 # highest accuracy
@@ -89,21 +95,24 @@ Then use the `which()` function to find the index of the highest accuracy.
 which(accuracy_vector == max(accuracy_vector))
 ```
 
-A higher C means more weight to correctness (post @58 in Piazza), so let's go ahead with the highest index, which corresponds to a value of C=10e5.
+We have a range of indices that corresponds to the highest accuracy score. This means that there are multiple values of `C` that fit our criteria. An index of 24 is a $log(C)$ value of -2, so with this range we have possible values of `C`: 0.01, 0.1, 1, 10, 100, 100000.
+
+However as we covered earlier in the question, there are risks of over- and underfitting if the value of `C` is too high or too low. Thus, we will proceed with moderation and select the index in the middle of the range and set `C=1`.
 
 Now we refit the model with the selected C value.
 
 ```{r}
-# build new svm with C=10e-2
+# build new svm with C=1
+set.seed(42)
 model <- ksvm(as.matrix(df[, 1:10]),
               as.factor(df[, 11]),
               type="C-svc",
               kernel="vanilladot",
-              C = 10000,
+              C = 1,
               scaled=T)
 ```
 
-We can then obtain the coefficients and y-intercept of the classifier equation (code for both provided in the homework sheet).
+We can then obtain the coefficients and y-intercept of the classifier equation.
 
 ```{r}
 # calculate coeffs
@@ -120,7 +129,7 @@ a0
 Finally, we contruct the classifier equation:
 
 $$
-0 = 0.0008936167A_{1}+0.0016125725A_{2}-0.0003415921A_{3}+0.0042114213A_{8}+1.0014527518A_{9}+0.0023573637A_{10}+0.0052757867A_{11}+0.0002803662A_{12}+0.0025097815A_{14}+0.0035920442 A_{15}+0.07046104
+0 = -0.0011026642A_{1}-0.0008980539A_{2}-0.0016074557A_{3}+0.0029041700A_{8}+1.0047363456A_{9}-0.0029852110A_{10}-0.0002035179A_{11}-0.0005504803A_{12}-0.0012519187 A_{14}+0.1064404601A_{15}+0.08148382
 $$
 
 where $A_{1}$ to $A_{15}$ are the corresponding column labels.
@@ -132,6 +141,8 @@ Just to be sure, let's also view all the predictions made by our model.
 pred <- predict(model,df[,1:10])
 pred
 ```
+
+There appears to be a fairly even spread of 1s and 0s. Following the hint given in the homework, I believe this spread supports our hypothesis that `C=1` is a good value of `C`.
 
 **Question 2.2 Part 2**
 
@@ -163,18 +174,19 @@ The `kernel` parameter in `ksvm` accepts a list of kernels that can be found in 
 
 The `stringdot` kernel specifically is used for string data. As we are dealing only with numerical data, this kernel is not suited to our data and thus will be excluded from the comparison.
 
-To find the best performing kernel, we will loop through a list of kernels and create a SVM using each kernel. Similar to the process in Q2.2.1, we will use accuracy as the metric for determining the best kernel for our model. Accuracy will be calculated for each SVM, then stored in the accuracy vector.
+To find the best performing kernel, we will loop through a list of kernels and create a SVM using each kernel. Similar to the process in Q2.2.1, we will use accuracy as the metric for determining the best kernel for our model. Accuracy will be calculated for each SVM, then stored in the accuracy vector. We will use the value of `C` that we have determined in Q2.2.1.
 
 ```{r}
 myKernels <- c("vanilladot","polydot","besseldot", "laplacedot", "rbfdot", "tanhdot", "anovadot", "splinedot")
 accuracy_vector <- vector("numeric")
 
+set.seed(42)
 for(i in 1:length(myKernels)){
   model <-  ksvm(as.matrix(df[,1:10]),
                  as.factor(df[,11]),
                  type="C-svc",
                  kernel=myKernels[[i]],
-                 C=10000,
+                 C=1,
                  scaled=T)
 
   # get predictions
@@ -202,7 +214,7 @@ barplot(df_2$accuracy_score ~ df_2$kernels,
         ylab="Kernels")
 ```
 
-From the bar chart, we observe that our top performers are the `splinedot`, `rbfdot` and `laplacedot` kernels.
+From the bar chart, we observe that our top performer is the `splinedot` kernel.
 
 Let's also take a closer look at the accuracy values from the dataframe:
 
@@ -211,7 +223,7 @@ Let's also take a closer look at the accuracy values from the dataframe:
 df_2
 ```
 
-Interestingly, the `laplacedot` kernel has managed to achieve a perfect accuracy score of 1! This suggests a high probability of overfitting.
+The `splinedot` kernel has an incredibly high accuracy of 0.966, followed by the `rbfdot` kernel at 0.870. Although the `splinedot` model is our top performing model, its accuracy is abnormally high, and it stands to reason that there may be a possibility of over-fitting for that model.
 
 **Question 2.2 Part 3**
 
@@ -223,7 +235,7 @@ We will want to find the optimal value of k, which represents the k number of ne
 
 Just like in Q2.2.1, to find this optimal value of k, we will loop over a range of values from 1 to 50 and create a KNN model for each k value.
 
-For each value of k, we calculate the corresponding accuracy, which is the ratio of the number of *correct* predictions to the total number of predictions. We will use accuracy as the metric to determine the best classifier and thus the best value of k.
+For each value of k, we calculate the corresponding model accuracy, which is the ratio of the number of *correct* predictions to the total number of predictions. We will use accuracy as the metric to determine the best classifier and thus the best value of k.
 
 At the end of the loop, store the accuracy of the model in a vector called `accuracy_vector`.
 
@@ -237,6 +249,7 @@ accuracy_vector <- vector("numeric")
 
 # loop over values of k
 # build knn model for each value of k
+set.seed(42)
 for (K in 1:50) {
   for (i in 1:nrow(df)) {
     model <- kknn(formula=df[-i,11]~.,
@@ -253,7 +266,7 @@ for (K in 1:50) {
   }
   
   # store accuracy for each k value in accuracy vector
-  accuracy_vector <- c(accuracy_vector,accuracy)
+  accuracy_vector <- c(accuracy_vector, accuracy)
 }
 ```
 
@@ -280,7 +293,7 @@ Then use the `which()` function to find the index of the highest accuracy.
 which(accuracy_vector == max(accuracy_vector))
 ```
 
-Thus we can suggest a value of k=12 to be optimal, because it results in the highest accuracy of 0.853211.
+Thus we can suggest a value of k=22 or 44 to be optimal, because it results in the highest accuracy of 0.8501529.
 
 **Question 3.1 Using the same data set (credit_card_data.txt or credit_card_data-headers.txt) as in Question 2.2, use the ksvm or kknn function to find a good classifier. a) Using cross-validation (do this for the k-nearest-neighbors model; SVM is optional)**
 
@@ -293,6 +306,7 @@ Using the same method as the previous question, we will simply loop through 50 v
 
 accuracy_vector <- vector("numeric")
 
+set.seed(42)
 for (K in 1:50) {
   kmodel3 <- cv.kknn(formula=R1~.,
                      df,
@@ -331,7 +345,9 @@ Then use the `which()` function to find the index of the highest accuracy.
 which(accuracy_vector == max(accuracy_vector))
 ```
 
-Thus we can suggest a value of k=11 to be optimal, because it results in the highest accuracy of 0.8577982.
+Thus we can suggest a value of k=7 to be optimal, because it results in the highest accuracy of 0.853211.
+
+I find it weird that the accuracy of the KNN model
 
 **b) Splitting the data into training, validation, and test data sets (pick either KNN or SVM; the other is optional)**
 
@@ -351,25 +367,27 @@ df_valid <- df[split_data$valid, ]
 df_test <- df[split_data$test, ]
 ```
 
-Let's train an SVM with the train dataset using the best value of C that we found earlier.
+Let's train an SVM with the train dataset using the best value of C and the best kernel that we found earlier.
 
 ```{r}
 # train an svm
+set.seed(42)
 svm_model <- ksvm(as.matrix(df_train[, 1:10]),
               as.factor(df_train[, 11]),
               type="C-svc",
-              kernel="vanilladot",
-              C=100000,
+              kernel="splinedot",
+              C=1,
               scaled=T)
 ```
 
-Now let's train a KNN model using the best value of k that we found earlier for the model *without* cross validation (this model does not use cross-validation, which is why we will use the k value from the model without cross-validation).
+Now let's train a KNN model using the best value of k that we found earlier.
 
 ```{r}
 # train a knn
+set.seed(42)
 knn_model <- train.kknn(as.factor(R1)~., 
                         df_train, 
-                        ks = 12,
+                        ks = 7,
                         kernel="rectangular", 
                         scale=T)
 ```
@@ -383,17 +401,25 @@ svm_valid_acc <- sum(svm_valid_pred == df_valid[, 11]) / nrow(df_valid)
 knn_valid_acc <- sum(knn_valid_pred == df_valid[, 11]) / nrow(df_valid)
 ```
 
+Create, and print a vector of the SVM accuracy and KNN accuracy so that we can see the accuracy scores side-by-side.
+
 ```{r}
 # compare validation accuracies
 valid_acc <- c(svm_valid_acc, knn_valid_acc)
 valid_acc
 ```
 
+The KNN model has the higher accuracy from the validation set. Therefore we will select this model to use for further testing.
+
+Now this model will be evaluated on the test dataset.
+
 ```{r}
 # predicting based on test data
-test_pred <- predict(svm_model, df_test[,1:10])
+test_pred <- predict(knn_model, df_test[,1:10])
 test_acc <- sum(test_pred == df_test[, 11]) / nrow(df_test)
 test_acc
 ```
 
-The SVM model is a better model for our data due to its higher performance on the validation set compared to KNN model. When testing the SVM model on the test dataset, our model has an accuracy of 0.8167939 down from the accuracy of 0.8473282 from the validation set.
+The KNN model is a better model for our data due to its higher performance on the validation set compared to SVM model. When testing the KNN model on the test dataset, our model has an accuracy of 0.802 down from the accuracy of 0.855 from the validation set.
+
+Another interesting thing to note is that even though the `splinedot` kernel gave us a very high accuracy in Q2.2.2, we can see now that when we evaluate it on the validation dataset, it gives us a much lower accuracy, strongly supporting our theory that the high accuracy from earlier was due to over-fitting.
