@@ -41,7 +41,7 @@ df = read.delim('week 1 data-summer/data 2.2/credit_card_data-headers.txt')
 
 For this question, we will be using the `ksvm` function in `kernlab` to classify the full credit card dataset.
 
-First, we will want to find the optimal value of the regularization parameter `C`. In SVM, `C` is the parameter that controls the trade-off between maximizing the margin and minimizing the classification error. A higher value of C allows for more flexibility in the decision boundary, potentially leading to overfitting, while a lower value of C imposes a smoother decision boundary and may lead to underfitting. To tie this back in with the module 2 lectures, the parameter `C` is similar to $\lambda$, but not the exact same coefficient.
+First, we will want to find the optimal value of the regularization parameter `C`. In SVM, `C` is the parameter that controls the trade-off between maximizing the margin and minimizing the classification error. A higher value of C allows for more flexibility in the decision boundary, potentially leading to overfitting, while a lower value of C imposes a smoother decision boundary and may lead to underfitting. [[source](https://medium.com/@pushkarmandot/what-is-the-significance-of-c-value-in-support-vector-machine-28224e852c5a)] To tie this back in with the module 2 lectures, the parameter `C` is similar to $\lambda$, but not the exact same coefficient.
 
 To find this optimal value of `C`, we will loop over a range of values starting from 10e-25 to 10e25. For each value of `C`, we construct an SVM model and calculate the corresponding accuracy, which represents the ratio of the number of *correct* predictions to the *total* number of predictions. Then store each accuracy in a vector `accuracy_vector`.
 
@@ -303,21 +303,22 @@ Using the same method as the previous question, we will simply loop through 50 v
 
 ```{r}
 # k-fold cross validation with cv.kknn
-
 accuracy_vector <- vector("numeric")
 
 set.seed(42)
 for (K in 1:50) {
-  kmodel3 <- cv.kknn(formula=R1~.,
-                     df,
-                     kcv=10, # k-fold cross validation
-                     k=K, 
-                     kernel="rectangular",
-                     scale=T)
-  kmodel3 <- data.frame(kmodel3) 
-  kmodelpred2 <- kmodel3[,2] # preds in 2nd col
-  rpred2 <- round(kmodelpred2) # round to 1 or 0
-  accuracy <- sum(rpred2 == df[,11]) / nrow(df) 
+  model <- cv.kknn(formula=R1~.,
+                   df,
+                   kcv=10, # k-fold cross validation
+                   k=K, 
+                   kernel="rectangular",
+                   scale=T)
+  
+  model <- data.frame(model) 
+  model_pred <- model[,2] # preds in 2nd col
+  pred <- round(model_pred) # round to 1 or 0
+  
+  accuracy <- sum(pred == df[,11]) / nrow(df) 
   accuracy_vector <- c(accuracy_vector, accuracy) 
 }
 ```
@@ -347,8 +348,6 @@ which(accuracy_vector == max(accuracy_vector))
 
 Thus we can suggest a value of k=7 to be optimal, because it results in the highest accuracy of 0.853211.
 
-I find it weird that the accuracy of the KNN model
-
 **b) Splitting the data into training, validation, and test data sets (pick either KNN or SVM; the other is optional)**
 
 For this questions, we will use the `splitTools` package to split our data into train, validation and test datasets. We will use 60% of the data for training, 20% for validation and 20% for testing.
@@ -373,11 +372,11 @@ Let's train an SVM with the train dataset using the best value of C and the best
 # train an svm
 set.seed(42)
 svm_model <- ksvm(as.matrix(df_train[, 1:10]),
-              as.factor(df_train[, 11]),
-              type="C-svc",
-              kernel="splinedot",
-              C=1,
-              scaled=T)
+                  as.factor(df_train[, 11]),
+                  type="C-svc",
+                  kernel="splinedot",
+                  C=1,
+                  scaled=T)
 ```
 
 Now let's train a KNN model using the best value of k that we found earlier.
