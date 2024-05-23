@@ -1,0 +1,99 @@
+---
+title: "week-2-homework"
+output: html_notebook
+---
+
+**Question 4.1** Describe a situation or problem from your job, everyday life, current events, etc., for which a clustering model would be appropriate. List some (up to 5) predictors that you might use.
+
+**Question 4.2** The iris data set `iris.txt` contains 150 data points, each with four predictor variables and one categorical response. The predictors are the width and length of the sepal and petal of flowers and the response is the type of flower. The data is available from the R library datasets and can be accessed with iris once the library is loaded. It is also available at the UCI Machine Learning Repository (<https://archive.ics.uci.edu/ml/datasets/Iris>). *The response values are only given to see how well a specific method performed and should not be used to build the model.* Use the R function `kmeans` to cluster the points as well as possible. Report the best combination of predictors, your suggested value of k, and how well your best clustering predicts flower type.
+
+Ref: <https://www.datacamp.com/tutorial/k-means-clustering-r>
+
+Ref: <https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/kmeans>
+
+```{r}
+iris_response <- read.csv("iris.txt", sep="") #includes response column
+iris <- iris_response[,1:4] #removes the response values from the data set
+head(iris)
+```
+
+```{r}
+tail(iris)
+```
+
+```{r}
+# deciding how many clusters we want
+# create vector to store wss for each value of k
+# wss = within cluster sum of squares
+WSS = vector("numeric")
+
+set.seed(42)
+
+# k in range(1,10)
+for (K in 1:10) {
+  # train kmeans model
+  km <- kmeans(iris,
+               centers = K,
+               nstart = 25)
+  # store wss for each model
+  WSS[K] <- km$tot.withinss
+}
+
+plot(WSS)
+```
+
+```{r}
+km1 <- kmeans(iris,
+              centers=3,
+              nstart=25)
+
+clusplot(iris, 
+         km1$cluster, 
+         color=T, 
+         lines=F)
+```
+
+**Question 5.1** Using crime data from the file `uscrime.txt` (<http://www.statsci.org/data/general/uscrime.txt>, description at <http://www.statsci.org/data/general/uscrime.html>), test to see whether there are any outliers in the last column (number of crimes per 100,000 people). Use the `grubbs.test` function in the `outliers` package in R.
+
+Ref: <https://www.rdocumentation.org/packages/outliers/versions/0.15/topics/grubbs.test>
+
+```{r}
+library(outliers)
+```
+
+```{r}
+crime <- read.table("uscrime.txt", header=T, )
+head(crime)
+```
+
+```{r}
+tail(crime)
+```
+
+```{r}
+crime[,16] #the crime column of the dataset
+```
+
+```{r}
+grubbs.test(crime[,16], type=10) #Grubbs first test for determining one outlier from the data set. Value 1993 is an outlier.
+```
+
+```{r}
+grubbs.test(crime[,16], type=11) #Grubbs seconds test for checcking if the lowest and highest values are two outliers on opposite tails of the sample. Values 342 and 1993 are outliers.
+```
+
+```{r}
+boxplot(crime[,16]) # Boxplot showing points 1969, 1993, and 1635 as potential outliers from dataset
+```
+
+**Question 6.1** Describe a situation or problem from your job, everyday life, current events, etc., for which a Change Detection model would be appropriate. Applying the CUSUM technique, how would you choose the critical value and the threshold?
+
+**Question 6.2** 1. Using July through October daily-high-temperature data for Atlanta for 1996 through 2015, use a CUSUM approach to identify when unofficial summer ends (i.e., when the weather starts cooling off) each year. You can get the data that you need from the file `temps.txt` or online, for example at <http://www.iweathernet.com/atlanta-weather-records> or <https://www.wunderground.com/history/airport/KFTY/2015/7/1/CustomHistory.html>. You can use R if you’d like, but it’s straightforward enough that an Excel spreadsheet can easily do the job too. 2. Use a CUSUM approach to make a judgment of whether Atlanta’s summer climate has gotten warmer in that time (and if so, when).
+
+Ref: <https://www.rdocumentation.org/packages/qcc/versions/2.6/topics/cusum>
+
+Ref: <https://rpubs.com/ssufian/658130>
+
+```{r}
+temps <- read.csv("temps.txt")
+```
