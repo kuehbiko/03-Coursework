@@ -5,95 +5,354 @@ output: html_notebook
 
 **Question 4.1** Describe a situation or problem from your job, everyday life, current events, etc., for which a clustering model would be appropriate. List some (up to 5) predictors that you might use.
 
+Clustering algorithms can be used in recommender systems to analyse user data. These clusters can be used to can be used to group similar users together based on their preferences and behaviors.
+
+For example a recommender system for a streaming platform might implement clustering based on:
+
+1.  Genre of a show
+
+2.  Length, such as the length of one episode, or number of episodes, or number of seasons
+
+3.  Producer, director or production studio of a show
+
+4.  The cast of the show
+
 **Question 4.2** The iris data set `iris.txt` contains 150 data points, each with four predictor variables and one categorical response. The predictors are the width and length of the sepal and petal of flowers and the response is the type of flower. The data is available from the R library datasets and can be accessed with iris once the library is loaded. It is also available at the UCI Machine Learning Repository (<https://archive.ics.uci.edu/ml/datasets/Iris>). *The response values are only given to see how well a specific method performed and should not be used to build the model.* Use the R function `kmeans` to cluster the points as well as possible. Report the best combination of predictors, your suggested value of k, and how well your best clustering predicts flower type.
 
 Ref: <https://www.datacamp.com/tutorial/k-means-clustering-r>
 
 Ref: <https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/kmeans>
 
-```{r}
-iris_response <- read.csv("iris.txt", sep="") #includes response column
-iris <- iris_response[,1:4] #removes the response values from the data set
-head(iris)
-```
+Ref: <https://www.analyticsvidhya.com/blog/2021/01/in-depth-intuition-of-k-means-clustering-algorithm-in-machine-learning/>
+
+Ref: <https://www.analyticsvidhya.com/blog/2019/08/comprehensive-guide-k-means-clustering/>
+
+Ref: <https://vitalflux.com/kmeans-silhouette-score-explained-with-python-example/>
+
+For this question, we're going to use the `kmeans()` function to cluster the Iris dataset.
+
+First, let's go ahead and load the dataset. The `iris` dataset is a built-in dataset which we can access via the `datasets` package in R, stored as the variable `iris`.
 
 ```{r}
-tail(iris)
+# load dataset
+library(datasets)
+data("iris")
+head(iris, 5)
 ```
 
+Remember that the `iris` dataset comes with a response variable column, which we do not want when training an unsupervised learning clustering model. So let's go ahead and remove that column from our dataset and store the modified dataset as `iris_unlabelled`.
+
 ```{r}
-# deciding how many clusters we want
-# create vector to store wss for each value of k
-# wss = within cluster sum of squares
-WSS = vector("numeric")
+# remove response column
+iris_unlabelled <- iris[,1:4] 
+head(iris_unlabelled,5)
+```
+
+Now we implement our k-means model. We will loop through 10 values of k and calculate the within-cluster sum of squares (WCSS) for each value of k.
+
+WCSS is the sum of squared distance between each data point and the centroid in the cluster. In the lectures, this is part of the formula that was given to us in lecture 4.3 $\sum_{j}(x_{ij}-z_{jk})^{2}$, and our overall aim is to minimize this value to the point where increasing the value of k no longer significantly affects the WCSS.
+
+```{r}
+# set up variables
+WCSS_vector = vector("numeric")
+k_vector <- 1:10
 
 set.seed(42)
 
-# k in range(1,10)
-for (K in 1:10) {
+# loop over values of k
+for (k in k_vector) {
   # train kmeans model
-  km <- kmeans(iris,
-               centers = K,
-               nstart = 25)
+  model <- kmeans(iris_unlabelled,
+                  centers = k,
+                  nstart = 25)
+  
   # store wss for each model
-  WSS[K] <- km$tot.withinss
+  WCSS_vector[k] <- model$tot.withinss
 }
+```
 
-plot(WSS)
+To identify this point, we will plot the WCSS against the values of k. As the number of clusters increases, the WCSS value will start to decrease. There will be a point on the graph where the curve will start to change very rapidly.
+
+```{r}
+# scree plot
+plot(WCSS_vector, type='b')
+```
+
+From this graph, we can see that the optimal value of k is probably 2 or 3. The elbow method is not an exact method and there can be cases such as this where the bend in the "elbow" is not obvious, making it difficult to determine the exact optimal value of k.
+
+To be more confident in our choice, we can turn to a second metric to evaluate the performance of our model.
+
+Unlike in classification, accuracy is not going to be a very good metric for evaluating clustering. In practice, we are dealing with unlabelled data and will not know what the "correct" clustering should be. Instead, one of the metrics commonly used in evaluating the quality of a clustering model is the silhouette plot, which we can visualize with the help of the `cluster` and `factoextra` packages.
+
+```{r}
+# import packages
+library(cluster)
+library(factoextra)
+```
+
+A 'silhouette' refers to a method of measuring consistency within clusters of data. The silhouette score is a measure of how similar a data point is to its own cluster, compared to other clusters. The silhouette score ranges from -1 to +1, where a high score indicates that the data point is well matched to its own cluster and poorly matched to other clusters.
+
+Since we have already narrowed our optimal values for k down to either k=2 or k=3, let's plot a silhouette plot for each of these:
+
+```{r}
+# silhouette plot when k = 2
+set.seed(42)
+model <- kmeans(iris_unlabelled, centers=2, nstart=25)
+ss <- silhouette(model$cluster, dist(iris_unlabelled)^2)
+fviz_silhouette(ss)
 ```
 
 ```{r}
-km1 <- kmeans(iris,
-              centers=3,
-              nstart=25)
-
-clusplot(iris, 
-         km1$cluster, 
-         color=T, 
-         lines=F)
+# silhouette plot when k = 3
+set.seed(42)
+model <- kmeans(iris_unlabelled, centers=3, nstart=25)
+ss <- silhouette(model$cluster, dist(iris_unlabelled)^2)
+fviz_silhouette(ss)
 ```
+
+The average silhouette scores for both k=2 and k=3 are very high, as expected. Although the silhouette score for k=2 (0.85) is higher than that of k=3 (0.74), the width of the silhouette plot representing each cluster also is a deciding point. For plot with k=3, the width of each cluster is more uniform than the plot with k=2, which has one cluster much wider than the other. Therefore, we can select the optimal number of clusters as 3.
+
+Let's re-train the model with our chosen value of k=3 and plot the clusters to see how well our clustering model performs on the `iris` dataset.
+
+```{r}
+# train kmeans model with k=3
+model <- kmeans(iris_unlabelled, centers=3, nstart=25)
+```
+
+```{r}
+# plot clusters
+clusplot(iris_unlabelled, model$cluster, color=T, shade=T, lines=F)
+```
+
+As mentioned before, we do not typically have response variables available for clustering models. However, since the Iris dataset does contain labels, we might as well take advantage of that to observe how our model has separated the data points into clusters.
+
+```{r}
+table(model$cluster, iris$Species)
+```
+
+From this breakdown, we can see the setosa cluster perfectly explained, meanwhile virginica and versicolor have some noise between their clusters.
 
 **Question 5.1** Using crime data from the file `uscrime.txt` (<http://www.statsci.org/data/general/uscrime.txt>, description at <http://www.statsci.org/data/general/uscrime.html>), test to see whether there are any outliers in the last column (number of crimes per 100,000 people). Use the `grubbs.test` function in the `outliers` package in R.
 
 Ref: <https://www.rdocumentation.org/packages/outliers/versions/0.15/topics/grubbs.test>
 
+Ref: <https://www.itl.nist.gov/div898/handbook/eda/section3/eda35h1.htm>
+
+Ref: <https://www.statisticshowto.com/grubbs-test/>
+
+For this question, we will be using the Grubbs' test to detect outliers in the last column of the `uscrime` dataset. the `grubbs.test` function is found in the `outliers` package.
+
+From the NIST Engineering Statistics Handbook:
+
+Grubbs' test (Grubbs 1969 and Stefansky 1972) is used to detect a single outlier in a univariate data set that follows an approximately normal distribution.
+
+Grubbs' test is defined for the hypothesis:
+
+-   H~0~: There are no outliers in the dataset
+
+-   H~1~: There is exactly one outlier in the dataset
+
+Note: All hypothesis tests in this exercise is performed at 95% confidence-level
+
 ```{r}
+# import package
 library(outliers)
 ```
 
 ```{r}
-crime <- read.table("uscrime.txt", header=T, )
+# load data
+crime <- read.delim("../week 2 data-summer/uscrime.txt")
 head(crime)
 ```
 
 ```{r}
-tail(crime)
+# view last column
+summary(crime[, 16])
+```
+
+Since the Grubbs' test is based on the assumption that the data is normally distributed, we should verify that our data can actually be approximated as a normal distribution before we apply the test.
+
+We can do this through a couple of ways:
+
+1.  Histogram plot
+
+```{r}
+# plotting histogram
+hist(crime$Crime, xlab="Crimes Committed",probability=TRUE)
+s = sd(crime$Crime)
+m = mean(crime$Crime)
+curve(dnorm(x, mean=m, sd=s), add=TRUE,lwd = 3)
+#grid()
+```
+
+Here we can see that that there is a clear right skew for the data in the `Crime` column. The distribution is not symmetrical and thus cannot be described as being normally distributed.
+
+2.  Shapiro-Wilk test
+
+```{r}
+# shapiro-wilk test
+shapiro.test(crime$Crime)
+```
+
+With a p-value of less than 0.05, the Shapiro-Wilk test
+
+Based on these 2 tests, it's pretty clear that we are not dealing with a univariate normal distribution.
+
+There is a chance that the data is *mostly* normally distributed and is being seriously affected by an extreme outlier. To check this, we will use the Grubbs' test to identify one outlier, then run the Shapiro-Wilk test again to check if the distribution is normal. If the data still fails the Shapiro-Wilk test, then the Grubbs' test is not suited for it.
+
+Use the parameter `type=10` to identify one outlier on one tail of the distribution. By default, this is the *right* tail.
+
+```{r}
+# identify one outlier (right tail)
+grubbs.test(crime[,16], type=10)
+```
+
+The test has identified the data point 1993 as an outlier. This is accompanied by a p-value of 0.07887. Because the p-value is more than 0.05, we fail to reject the null hypothesis that this data point is an outlier; we do not have enough evidence to say that 1993 is an outlier.
+
+Let's see what happens if we drop 1993 from the data set:
+
+```{r}
+# data frame with 1993 removed
+crime2 <- subset(crime,Crime!=1993 )
+crime2
 ```
 
 ```{r}
-crime[,16] #the crime column of the dataset
+# shapiro-wilk test
+shapiro.test(df2$Crime)
 ```
 
-```{r}
-grubbs.test(crime[,16], type=10) #Grubbs first test for determining one outlier from the data set. Value 1993 is an outlier.
-```
+With a p-value of \< 0.05, this dataset is definitely not normally distributed even with one outlier removed. We can say with confidence that the Grubbs' test will not produce accurate results and under normal circumstances, should not be used on this dataset.
+
+However, for the purpose of this exercise, let's continue to try the Grubbs' test to identify one outlier on the *left* tail.
 
 ```{r}
-grubbs.test(crime[,16], type=11) #Grubbs seconds test for checcking if the lowest and highest values are two outliers on opposite tails of the sample. Values 342 and 1993 are outliers.
+# identify one outlier (left tail)
+grubbs.test(crime[,16], type=10, opposite=T)
 ```
 
+The test has identified the data point 342 as an outlier. This is accompanied by a p-value of 1. This p-value is even larger than before, and greater than 0.05. Again, we fail to reject the null hypothesis that this data point is an outlier as we do not have enough evidence to say that 342 is an outlier.
+
+The Grubbs' test for one outlier on either tail is called with the parameter `type=11` which should return both 1993 and 342:
+
 ```{r}
-boxplot(crime[,16]) # Boxplot showing points 1969, 1993, and 1635 as potential outliers from dataset
+# identify one outlier on each tail (two tails)
+grubbs.test(crime[,16], type=11) 
 ```
+
+Finally, we try `type=20` to identify two outliers on the right tail.
+
+```{r}
+# identify two outliers on one tail (right tail)
+#grubbs.test(crime[,16], type=20)
+```
+
+Unexpectedly, this code chunk has thrown an error (I have commented it out, so it doesn't error during the knitting of this document). Here is the error message:
+
+`Error in qgrubbs(q, n, type, rev = TRUE) : n must be in range 3-30`
+
+It appears that the `grubbs.test` function for 2 outliers on one tail only works on datasets of length 3-30. As our dataset has 47 rows, we are not able to run this code.
+
+As expected, using `grubbs.test` on a non-uniform distribution, we are unable to accept a single outlier at the min or max of our crime rate data, and we are unable to test for two outliers at the max due to the size of our dataset.
+
+To identify outliers for a non-uniformly distributed dataset, it is instead recommended to use the Tietjen-Moore test, or the generalized extreme studentized deviate test.
 
 **Question 6.1** Describe a situation or problem from your job, everyday life, current events, etc., for which a Change Detection model would be appropriate. Applying the CUSUM technique, how would you choose the critical value and the threshold?
 
-**Question 6.2** 1. Using July through October daily-high-temperature data for Atlanta for 1996 through 2015, use a CUSUM approach to identify when unofficial summer ends (i.e., when the weather starts cooling off) each year. You can get the data that you need from the file `temps.txt` or online, for example at <http://www.iweathernet.com/atlanta-weather-records> or <https://www.wunderground.com/history/airport/KFTY/2015/7/1/CustomHistory.html>. You can use R if you’d like, but it’s straightforward enough that an Excel spreadsheet can easily do the job too. 2. Use a CUSUM approach to make a judgment of whether Atlanta’s summer climate has gotten warmer in that time (and if so, when).
+An asset management company can use CUSUM to monitor portfolios under their management.
+
+Subtle changes in a portfolio's control chart can indicate that a portfolio is at risk, or that a portfolio is benefiting positively from a change in investment strategy.
+
+I think both the critical and threshold value would be affected by the client's risk appetite, where a higher risk appetite means a higher critical value/threshold.
+
+**Question 6.2.1** Using July through October daily-high-temperature data for Atlanta for 1996 through 2015, use a CUSUM approach to identify when unofficial summer ends (i.e., when the weather starts cooling off) each year. You can get the data that you need from the file `temps.txt` or online, for example at <http://www.iweathernet.com/atlanta-weather-records> or <https://www.wunderground.com/history/airport/KFTY/2015/7/1/CustomHistory.html>. You can use R if you’d like, but it’s straightforward enough that an Excel spreadsheet can easily do the job too.
 
 Ref: <https://www.rdocumentation.org/packages/qcc/versions/2.6/topics/cusum>
 
 Ref: <https://rpubs.com/ssufian/658130>
 
+We are going to need a control chart for each year.
+
 ```{r}
-temps <- read.csv("temps.txt")
+library(qcc)
 ```
+
+```{r}
+temps <- read.delim("../week 2 data-summer/temps.txt")
+head(temps,5)
+```
+
+```{r}
+# rename headers
+temps <- temps %>% rename_at(vars(starts_with("X")),funs(str_replace(.,"X","")))
+
+# wide to long
+temps2 <- melt(temps, id.vars = c("DAY"),variable.name = "YEAR",value.name="TEMP")
+```
+
+```{r}
+# yearly average temperature
+mean_yearly<-aggregate(TEMP~YEAR, data=temps2, mean)
+head(temp.mean,5)
+```
+
+```{r}
+# yearly standard deviation
+sd_yearly<-aggregate(TEMP~YEAR, data=temps2, sd)
+head(sd_yearly,5)
+```
+
+```{r}
+# std dev of entire data
+sd_overall<-sd(as.matrix(temps[,2:21]), na.rm = TRUE)
+sd_overall
+```
+
+```{r}
+# surely we dont need to plot everything out?
+
+temps3<-select(temps,2:21)
+CUSUMmodels <- vector(mode="list", length=ncol(df3)) 
+CUSUMviolations <- vector(mode="list", length=ncol(df3)) 
+
+DI = 4 # flagged at 4 std dev
+Shift = 3 # C=(delta*sigma)/2, where delta*sigma = Shift
+
+# loop over years
+for (i in 1:ncol(temp3)) {
+  CUSUMmodels[[i]] <- cusum(df3[,i], 
+                            center=mean_yearly$TEMP[i], 
+                            std.dev=sd_yearly$TEMP[i], 
+                            decision.interval=DI, 
+                            se.shift=Shift, 
+                            plot=F)
+  
+  # store any violations in vector
+  CUSUMviolations[[i]] <- CUSUMmodels[[i]]$violations$lower
+}
+```
+
+```{r}
+#looking for minimum expense values and when it occurs
+no.violations<-13 # get length(CUSUMviolations)
+CUSUMlowest <- vector(mode="list", length=no.violations) 
+#Years (by groups) with violations. For ex: 2=1997, 3=year 1998 etc. from above loop
+x<- c(2,3,5,6,7,9,10,11,12,13,14,17,18)
+for (i in x){
+  CUSUMlowest[i] <- min(CUSUMviolations[[i]])
+}
+unlist(CUSUMlowest)#index or when the lowest expenses occurred; the higher means the closer to Oct
+```
+
+```{r}
+#Finding out what the index of low expenses are in terms of actual days of the month
+lowtemp.c<-c(120,116,102,120,117,108,121,119,110,122)
+df.reconnect<- temps %>% mutate(Low.expense.Index = row_number()) %>% select("DAY","Low.expense.Index") 
+df.lowtemp.days<- slice(df.reconnect, lowtemp.c)
+#Days when expense dollars were lowest
+df.lowtemp.days
+```
+
+*Based on default T=4 and Shift or C-value of 1.5 sigma, we discovered 13 years were in low expense violations. These violations happened in the later part of summer. By the same token, it was discovered most of the lowest expenses occurred in the later half of October. Based on this data set and our guesstimated T and C values; most of the changes happened in the last week of October*
+
+**Question 6.2.2** Use a CUSUM approach to make a judgment of whether Atlanta’s summer climate has gotten warmer in that time (and if so, when).
