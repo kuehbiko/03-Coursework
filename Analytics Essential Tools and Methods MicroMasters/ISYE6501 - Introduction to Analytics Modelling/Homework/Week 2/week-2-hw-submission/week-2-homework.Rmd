@@ -1,6 +1,8 @@
 ---
 title: "week-2-homework"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 **Question 4.1** Describe a situation or problem from your job, everyday life, current events, etc., for which a clustering model would be appropriate. List some (up to 5) predictors that you might use.
@@ -182,7 +184,6 @@ hist(crime$Crime, xlab="Crimes Committed",probability=TRUE)
 s = sd(crime$Crime)
 m = mean(crime$Crime)
 curve(dnorm(x, mean=m, sd=s), add=TRUE,lwd = 3)
-#grid()
 ```
 
 Here we can see that that there is a clear right skew for the data in the `Crime` column. The distribution is not symmetrical and thus cannot be described as being normally distributed.
@@ -214,12 +215,12 @@ Let's see what happens if we drop 1993 from the data set:
 ```{r}
 # data frame with 1993 removed
 crime2 <- subset(crime,Crime!=1993 )
-crime2
+head(crime2,5)
 ```
 
 ```{r}
 # shapiro-wilk test
-shapiro.test(df2$Crime)
+shapiro.test(crime2$Crime)
 ```
 
 With a p-value of \< 0.05, this dataset is definitely not normally distributed even with one outlier removed. We can say with confidence that the Grubbs' test will not produce accurate results and under normal circumstances, should not be used on this dataset.
@@ -269,12 +270,12 @@ I think both the critical and threshold value would be affected by the client's 
 
 Ref: <https://www.rdocumentation.org/packages/qcc/versions/2.6/topics/cusum>
 
-Ref: <https://rpubs.com/ssufian/658130>
-
-We are going to need a control chart for each year.
+We are going to use the `qcc` package for to carry out the CUSUM portion of question, which help from functions in the `reshape2` and `dplyr` packages.
 
 ```{r}
 library(qcc)
+library(reshape2)
+library(dplyr)
 ```
 
 ```{r}
@@ -282,77 +283,134 @@ temps <- read.delim("../week 2 data-summer/temps.txt")
 head(temps,5)
 ```
 
-```{r}
-# rename headers
-temps <- temps %>% rename_at(vars(starts_with("X")),funs(str_replace(.,"X","")))
+For convenience, we will want to modify the table a bit and do some data exploration.
 
+```{r}
 # wide to long
 temps2 <- melt(temps, id.vars = c("DAY"),variable.name = "YEAR",value.name="TEMP")
 ```
 
+Let's get some basic descriptive statistics, such as the mean and standard deviation temperature of every year (`mean_yearly` and `sd_yearly`), which we will be using in the next section.
+
 ```{r}
 # yearly average temperature
 mean_yearly<-aggregate(TEMP~YEAR, data=temps2, mean)
-head(temp.mean,5)
-```
-
-```{r}
 # yearly standard deviation
 sd_yearly<-aggregate(TEMP~YEAR, data=temps2, sd)
-head(sd_yearly,5)
 ```
 
-```{r}
-# std dev of entire data
-sd_overall<-sd(as.matrix(temps[,2:21]), na.rm = TRUE)
-sd_overall
-```
+The `cusum()` function only works with numerical or boolean data, so we have to drop the first date column via `temp[,2:21`. Save the new, entirely numerical data in a new dataframe `temps3`. We will map the indices back to their corresponding dates later.
+
+The `decision.interval` parameter represents the threshold T in terms of the number of standard deviations from the mean. In this case, we have chosen the threshold to be 2 standard deviations. 2 standard deviations from the mean encompasses 95% of the entire distribution, and should be sufficient to detect any significant changes in temperature.
+
+The `se.shift` parameter represents the critical value c in terms of the amount of standard error. We will set this at 3.
+
+We will create a CUSUM model for every year in the data. From there, we can extract all instance of threshold breaches for the year with `models[[i]]$violations$lower`, which we will save to the `breaches` vector.
+
+Set `plot=F` to prevent the `cusum()` function from generating a plot for every year (20 plots in total!). If you are interested to see how the CUSUM plot looks like in R, there is a single individual example in Q6.2.2.
 
 ```{r}
-# surely we dont need to plot everything out?
+# remove date column
+temps3 <- temps[,2:21]
 
-temps3<-select(temps,2:21)
-CUSUMmodels <- vector(mode="list", length=ncol(df3)) 
-CUSUMviolations <- vector(mode="list", length=ncol(df3)) 
+# define variables
+models <- vector(mode="list", length=ncol(temps3)) 
+breaches <- vector(mode="list", length=ncol(temps3)) 
 
-DI = 4 # flagged at 4 std dev
-Shift = 3 # C=(delta*sigma)/2, where delta*sigma = Shift
+DI = 2 # flag breaches at 2 std dev
+Shift = 3
 
 # loop over years
-for (i in 1:ncol(temp3)) {
-  CUSUMmodels[[i]] <- cusum(df3[,i], 
-                            center=mean_yearly$TEMP[i], 
-                            std.dev=sd_yearly$TEMP[i], 
-                            decision.interval=DI, 
-                            se.shift=Shift, 
-                            plot=F)
+for (i in 1:ncol(temps3)) {
+  models[[i]] <- cusum(temps3[,i], 
+                       center=mean_yearly$TEMP[i], 
+                       std.dev=sd_yearly$TEMP[i], 
+                       decision.interval=DI, 
+                       se.shift=Shift,
+                       plot=F) #no graph plotted
   
-  # store any violations in vector
-  CUSUMviolations[[i]] <- CUSUMmodels[[i]]$violations$lower
+  # store any breach datapoints in vector
+  breaches[[i]] <- models[[i]]$violations$lower
 }
 ```
 
+Each element of `breaches` is a *list* of the row indices of data points that have breached the threshold. We can demonstrate this below with a preview:
+
 ```{r}
-#looking for minimum expense values and when it occurs
-no.violations<-13 # get length(CUSUMviolations)
-CUSUMlowest <- vector(mode="list", length=no.violations) 
-#Years (by groups) with violations. For ex: 2=1997, 3=year 1998 etc. from above loop
-x<- c(2,3,5,6,7,9,10,11,12,13,14,17,18)
-for (i in x){
-  CUSUMlowest[i] <- min(CUSUMviolations[[i]])
+breaches[1:5]
+```
+
+```{r}
+# count the number of years that had flagged datapoints
+counter = 0
+year_index = vector("numeric")
+
+for (i in 1:length(breaches)){
+  if (lengths(breaches[i]) != 0){
+    counter = counter+1
+    year_index <- c(year_index, i)
+  }
 }
-unlist(CUSUMlowest)#index or when the lowest expenses occurred; the higher means the closer to Oct
+counter
+year_index
 ```
+
+However, we do not need *all* the breaches, just the first breach of every year. Let's get the row index of the first breach of every year and store it in the vector `date_index`.
 
 ```{r}
-#Finding out what the index of low expenses are in terms of actual days of the month
-lowtemp.c<-c(120,116,102,120,117,108,121,119,110,122)
-df.reconnect<- temps %>% mutate(Low.expense.Index = row_number()) %>% select("DAY","Low.expense.Index") 
-df.lowtemp.days<- slice(df.reconnect, lowtemp.c)
-#Days when expense dollars were lowest
-df.lowtemp.days
+# looking for the first breach in each year and when it occurs
+date_index_vec <- vector(mode="list", length=counter) 
+
+# loop through year index (index 1 = 1996, index 2 = 1997, etc.)
+for (i in year_index){
+  # first breach of the year
+  date_index_vec[i] <- breaches[[i]][1]
+}
+
+date_index <- unlist(date_index_vec)
+date_index # index of the date when the first breach occurs
 ```
 
-*Based on default T=4 and Shift or C-value of 1.5 sigma, we discovered 13 years were in low expense violations. These violations happened in the later part of summer. By the same token, it was discovered most of the lowest expenses occurred in the later half of October. Based on this data set and our guesstimated T and C values; most of the changes happened in the last week of October*
+Then, we can map the row index of each breach back to the corresponding dates from the original `temps` dataframe.
+
+```{r}
+# mapping row/date indices to the actual dates
+lowtemp_c <- date_index
+
+df_reconnect <- temps %>% 
+                mutate(Low.expense.Index = row_number()) %>% 
+                select("DAY","Low.expense.Index") 
+df_lowtemp_days<- slice(df_reconnect, lowtemp_c)
+
+# dates of the first breach (each row = 1 year)
+df_lowtemp_days
+```
+
+Taking the median of the dates of all these breaches, we get a value of 114.5, which corresponds to a date of 22-23 Oct as the end of summer.
+
+```{r}
+median(date_index)
+```
 
 **Question 6.2.2** Use a CUSUM approach to make a judgment of whether Atlanta’s summer climate has gotten warmer in that time (and if so, when).
+
+The advice from officer hours was to measure this metric by the length of summer. This is because warmer summers mean a longer time for the temperature to drop, which results in a longer time taken for a breach in the lower bound of temperatures.
+
+From Q6.2.1, we can take the first breach each year as the last day of summer. These dates are stored in `date_index` as row indices.
+
+Remember that this row index is basically equivalent to the number of days since 1st July, which corresponds to the number of days in our definition of summer.
+
+I have chosen to keep `decision.interval` at 2 standard deviations according to my reasonings above. However, `Shift` has been reduced to 2 standard errors. The number of days in summer is a smaller range than the range of temperatures in summer, thus I believe this merits a more sensitive model and thus a lower `Shift` value.
+
+Additionally, we should not construct the CUSUM model based on the mean of the entire data in the event that summer indeed has gotten warmer. Instead, we will take the mean and standard deviation of the first 5 years as the norm and measure subsequent summers against this standard.
+
+```{r}
+# take first 5 years of data as 'normal' - use this as the mean and standard deviation
+cusum(date_index, 
+      center=mean(date_index[1:5]), 
+      std.dev=sd(date_index[1:5]), 
+      decision.interval=2,
+      se.shift=2)
+```
+
+Based on the critical value and threshold that we have chosen, we can safely say that Atlanta's summer climate has gotten warmer within the time range of 1996-2015.
