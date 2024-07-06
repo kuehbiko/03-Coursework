@@ -1,21 +1,20 @@
 # 2024
-## ISYE6501 Introduction to Analytics Modeling
-#### May - Jul
+## May - Jul | ISYE6501 Introduction to Analytics Modeling
 **Languages:** R, Python
 
-## CS50P Introduction to Programming with Python
-#### Feb - May
+## Feb - May | CS50P Introduction to Programming with Python
 **Languages:** Python
 
 # 2023
-## AI200 Applied Machine Learning
-#### Sep 2023 - Oct 2023
+## Sep - Oct | AI200 Applied Machine Learning
+#### Capstone Project
 **Languages:** Python
 
-## Google Advanced Data Analytics
-#### Jul 2023 - Sep 2023
+
+## Jul - Sep | Google Advanced Data Analytics
+#### Capstone Project
 **Languages:** Python
 
-## Google Data Analytics
-#### May 2023 - Jun 2023
+## May - Jun | Google Data Analytics
+#### Capstone Project
 **Languages:** R, SQL
