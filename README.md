@@ -1,5 +1,7 @@
 # 2024
-## May - Jul | ISYE6501 Introduction to Analytics Modeling
+## Aug - | ISYE6740 Computational Data Analysis
+
+## May - Jul | ISYE6501 Introduction to Analytics Modeling (Summer '24)
 **Languages:** R, Python
 
 ## Feb - May | CS50P Introduction to Programming with Python
