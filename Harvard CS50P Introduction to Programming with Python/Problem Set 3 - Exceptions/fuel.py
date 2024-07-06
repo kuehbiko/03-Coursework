@@ -1,3 +1,5 @@
+# https://cs50.harvard.edu/python/2022/psets/3/fuel/
+
 def main():
     x = fraction("Fraction: ")
     if x >= 0.99:
