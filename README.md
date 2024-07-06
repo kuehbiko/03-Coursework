@@ -4,6 +4,10 @@
 ## May - Jul | ISYE6501 Introduction to Analytics Modeling (Summer '24)
 **Languages:** R, Python
 
+## Feb - May | BCG RISE 2.0 for Financial Services
+#### Capstone Project
+**Languages:** Python, MS SQL
+
 ## Feb - May | CS50P Introduction to Programming with Python
 **Languages:** Python
 
@@ -19,4 +23,4 @@
 
 ## May - Jun | Google Data Analytics
 #### Capstone Project
-**Languages:** R, SQL
+**Languages:** R, MySQL
