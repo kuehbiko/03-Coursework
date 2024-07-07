@@ -18,7 +18,7 @@ months = ["January",
           "December"
           ]
 
-while True:
+while True: # loop forever
     date = input("Date: ")
 
     try:
@@ -35,7 +35,7 @@ while True:
         month = int(month)
         day = int(day)
 
-        if (month <= 12) and (day <= 31):# check month number <=12 and day number <=31
+        if (month <= 12) and (day <= 31): # check month number <=12 and day number <=31
             print(f"{year}-{month:02}-{day:02}")
             break
 
