@@ -1,6 +1,6 @@
 # Contents
 # 2024
-## Aug - | ISYE6740 Computational Data Analysis
+## Aug - | [ISYE6740 Computational Data Analysis](https://github.com/kuehbiko/03-Coursework/tree/main/Analytics%20Essential%20Tools%20and%20Methods%20MicroMasters/ISYE6740%20Computational%20Data%20Analytics)
 
 ## May - Jul | ISYE6501 Introduction to Analytics Modeling (Summer '24)
 **Languages:** R, Python
