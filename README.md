@@ -7,10 +7,10 @@
 
 ## Feb - May | BCG RISE 2.0 for Financial Services
 #### Capstone Project
-**Languages:** Python, MS SQL
+**Languages:** Python, MS SQL \
 Not allowed to share the contents of this course due to NDA. However, we are allowed to share our projects and final capstone project. These projects can be found in the folder.
 
-## Feb - May | CS50P Introduction to Programming with Python
+## Feb - May | [CS50P Introduction to Programming with Python](https://github.com/kuehbiko/03-Coursework/tree/main/Harvard%20CS50P%20Introduction%20to%20Programming%20with%20Python)
 **Languages:** Python
 
 # 2023
