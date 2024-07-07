@@ -14,15 +14,15 @@ Not allowed to share the contents of this course due to NDA. However, we are all
 **Languages:** Python
 
 # 2023
-## Sep - Oct | AI200 Applied Machine Learning
+## Sep - Oct | [AI200 Applied Machine Learning](https://github.com/kuehbiko/03-Coursework/tree/main/Heicoders%20Academy%20AI200%20Applied%20Machine%20Learning)
 #### [Capstone Project](https://github.com/kuehbiko/03-Coursework/tree/main/Heicoders%20Academy%20AI200%20Applied%20Machine%20Learning/Capstone%20Project)
 **Languages:** Python
 
 
-## Jul - Sep | Google Advanced Data Analytics
+## Jul - Sep | [Google Advanced Data Analytics](https://github.com/kuehbiko/03-Coursework/tree/main/Google%20Advanced%20Data%20Analytics)
 #### Capstone Project
 **Languages:** Python
 
-## May - Jun | Google Data Analytics
-#### Capstone Project
+## May - Jun | [Google Data Analytics](https://github.com/kuehbiko/03-Coursework/tree/main/Google%20Data%20Analytics)
+#### [Capstone Project 1](https://github.com/kuehbiko/03-Coursework/tree/main/Google%20Data%20Analytics/Capstone%20-%20Bellabeat) | [Capstone Project 2](https://github.com/kuehbiko/03-Coursework/tree/main/Google%20Data%20Analytics/Capstone%20-%20Cyclistic)
 **Languages:** R, MySQL
