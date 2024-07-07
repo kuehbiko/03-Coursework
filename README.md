@@ -14,7 +14,7 @@
 
 # 2023
 ## Sep - Oct | AI200 Applied Machine Learning
-#### Capstone Project
+#### [Capstone Project](https://github.com/kuehbiko/03-Coursework/tree/main/Heicoders%20Academy%20AI200%20Applied%20Machine%20Learning/Capstone%20Project)
 **Languages:** Python
 
 
