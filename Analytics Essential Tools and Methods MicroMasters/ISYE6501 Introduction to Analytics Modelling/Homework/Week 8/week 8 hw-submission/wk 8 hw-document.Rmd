@@ -1,0 +1,64 @@
+---
+title: "Week 7 homework"
+output: html_notebook
+---
+
+**Question 18.1**
+
+Describe analytics models and data that could be used to make good recommendations to the power company.
+
+Here are some questions to consider:
+
+-   The bottom-line question is which shutoffs should be done each month, given the capacity constraints.  One consideration is that some of the capacity – the workers’ time – is taken up by travel, so maybe the shutoffs can be scheduled in a way that increases the number of them that can be done.
+
+-   Not every shutoff is equal.  Some shutoffs shouldn’t be done at all, because if the power is left on, those people are likely to pay the bill eventually.  How can you identify which shutoffs should or shouldn’t be done?  And among the ones to shut off, how should they be prioritized?
+
+Think about the problem and your approach.  Then talk about it with other learners, and share and combine your ideas.  And then, put your approaches up on the discussion forum, and give feedback and suggestions to each other.
+
+You can use the {given, use, to} format to guide the discussions: Given {data}, use {model} to {result}.
+
+Have fun!  Taking a real problem, and thinking through the modeling and data process to build a good solution framework, is my favorite part of analytics.
+
+**Student Answer**
+
+**Step 1: Identify users that won't pay and the estimated cost of not shutting off power**
+
+**Given:**
+
+-   Payment data (payment amount, payment history)
+
+-   Building type (residential vs business vs government)
+
+-   Ownership type (rental vs owned)
+
+-   Power usage
+
+**Use:** Multi-label Classification Model. A common model for multi-labelling classification is deep learning.
+
+**To:** Classify customers into categories [will pay], [late pay], and [won't pay]. Multi-labelling classification is used instead of binary classification as there are 3 distinct categories instead of the usual 2. We will use the classification model to predict the probability that each customer will pay, will pay late, or will not pay. This model will help with new customers being considered for power shutoffs.
+
+Having identified customers that will not pay, we can then also go on to estimate the expected losses for the company.
+
+Given how much the company is willing to lose, we can also iterate on the model and set a threshold for which the customer gets considered for a shutoff. For example, if the company is willing to take more loss, we might lower the threshold to consider customers that have a 65% chance of not paying instead of a higher threshold at 75%.
+
+**Step 2: Optimizing resources for shutoffs**
+
+**Given**:
+
+-   Customers identified for shutoffs (from step 1)
+
+-   Estimated loss from not shutting off power (from step 1)
+
+-   Number of employees
+
+-   Cost per employee
+
+-   Location of property
+
+-   Time taken to travel between properties
+
+**Use:** Communities in graphs, Optimization models.
+
+**To:** Separate customers into communities.
+
+The optimization model should then be able to identify the most efficient way for employees to travel within the communities
