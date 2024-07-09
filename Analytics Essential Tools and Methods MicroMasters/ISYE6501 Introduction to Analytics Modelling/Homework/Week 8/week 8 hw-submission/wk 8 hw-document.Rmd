@@ -1,6 +1,8 @@
 ---
-title: "Week 7 homework"
-output: html_notebook
+title: "Week 8 homework"
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 **Question 18.1**
@@ -21,44 +23,66 @@ Have fun!  Taking a real problem, and thinking through the modeling and data pr
 
 **Student Answer**
 
-**Step 1: Identify users that won't pay and the estimated cost of not shutting off power**
+First, we determine which customers we should perform shutoffs for, as well as how we will prioritize customers for shutoffs.
 
-**Given:**
+**Given*:***
 
--   Payment data (payment amount, payment history)
-
--   Building type (residential vs business vs government)
-
--   Ownership type (rental vs owned)
+-   Previous payment data (payment amount, number of missed payments, time between billing and payment)
 
 -   Power usage
 
-**Use:** Multi-label Classification Model. A common model for multi-labelling classification is deep learning.
+-   Customer demographic data (age, marital status, education)
 
-**To:** Classify customers into categories [will pay], [late pay], and [won't pay]. Multi-labelling classification is used instead of binary classification as there are 3 distinct categories instead of the usual 2. We will use the classification model to predict the probability that each customer will pay, will pay late, or will not pay. This model will help with new customers being considered for power shutoffs.
+-   Property type (residential, commercial, industrial, etc.)
 
-Having identified customers that will not pay, we can then also go on to estimate the expected losses for the company.
+-   Ownership type (rented vs owned)
 
-Given how much the company is willing to lose, we can also iterate on the model and set a threshold for which the customer gets considered for a shutoff. For example, if the company is willing to take more loss, we might lower the threshold to consider customers that have a 65% chance of not paying instead of a higher threshold at 75%.
+-   If residential, number of residents
 
-**Step 2: Optimizing resources for shutoffs**
+**Use:** A classification model, such as SVMs, logistic regression, or a decision tree. In fact, try multiple classification models before validating and selecting the final model.
 
-**Given**:
+**To:** Predict the probability that customers will default on payment.
 
--   Customers identified for shutoffs (from step 1)
+Notably, we will not consider customers who have paid all their bills thus far. These customers are not relevant to our model. Instead, we want to separate the remaining customers into those that *will eventually pay* and those that *will no longer pay*.
 
--   Estimated loss from not shutting off power (from step 1)
+This model can be applied to new customers to predict their likelihood of paying their bill, or if existing customers are beginning to show signs that they will stop paying their bill. By predicting and identifying defaulters early, the company can determine customers to perform shutoffs for before they incur higher losses.
 
--   Number of employees
+Also, we can use the predicted probabilities to calculate the expected losses for the company. This will also help us prioritize the customers to perform shutoffs for. For example, consider two customers with similar probabilities of defaulting: Customer A who is 75% likely to miss the next payment and Customer B who is 70% likely to miss the next payment. However Customer A has a low electricity consumption of 800kWh per month while Customer B has a much higher consumption of 3000kWh and has incurred a high bill. In such a case, although Customer A has a higher probability of defaulting, Customer B will result in higher losses for the company, and therefore should be prioritized for shutoffs over Customer A.
 
--   Cost per employee
+After identifying customers for shutoffs, we can then start to find the optimal solution for distributing resources to perform shutoffs.
 
--   Location of property
+**Given:**
 
--   Time taken to travel between properties
+-   Location data of the property (latitude and longitude)
 
-**Use:** Communities in graphs, Optimization models.
+-   Time to travel between property locations
 
-**To:** Separate customers into communities.
+-   Location data of employees (eg. where each employee is based within a city)
 
-The optimization model should then be able to identify the most efficient way for employees to travel within the communities
+-   Company resources for manpower and transportation
+
+**Use**: Clustering models: K-Means algorithm, Network optimization program
+
+**To:** Generate clusters of property locations, then determine the optimal way to distribute manpower resources between these clusters.
+
+First, we will want to use a clustering model to determine clusters of property locations that we have to send employees to. The benefit of using a k-means clustering algorithm instead of a more advanced algorithm such as the Louvain algorithm is that we are able to set the desired number of clusters for the k-means algorithm. This way, we will not be stuck in a situation where we have too many or too few clusters without the ability to adjust.
+
+Once we have our clusters, we can get data on the time it takes to travel between locations within each clusters. This can be done using publicly available data such as Google Maps or GPS, or can be calculated in-house if preferred.
+
+Then, we can implement a network optimization program for distributing resources. Some variables include the travel time to, and between, locations, the fuel cost to travel, and the cost of hiring one more employee. We will attempt to maximise the number of shutoffs we can perform while implementing constraints on time and monetary cost.
+
+If we are unable to find a satisfactory solution, we can go back to the k-means algorithm to change the number of desired clusters before running the optimization program again.
+
+**Conclusion**:
+
+A combination of a classification model, a clustering algorithm and a network optimization program will help us determine which shutoffs should be performed for the month.
+
+We can use a classification model to estimate which customers will cost the company the most money, which will be used as the basis for prioritizing shutoffs.
+
+We also used a clustering algorithm to identify clusters of property locations. The selected clustering algorithm in this case was the k-means algorithm for it's suitability with geolocation data and the control we have over the number of clusters.
+
+After identifying clusters, we use a network optimization program to decide how many employees we will need and where to send them.
+
+Although not included in the solution, we could also take into consideration variations in travelling time based on weather or seasons as travelling time and convenience during some weather events may take longer or may not be possible at all.
+
+Something else to consider would also be the ethical implications of shutting off a customer's electricity. While we deal with a lot of hard data in analytics, there are some things that are difficult to quantify and it's important to consider non-numerical factors that may not be included. For example, instead of initiating a shutoff at the first offence, an effort could be made to extend help and resources to customers that may not know they exist. While there is a fund set up for customers who cannot afford to pay, some customers that cannot afford to pay may not qualify for the fund, or may not know it exists. It's also important to consider when the shutoffs are being performed. Shutting off power during the winter months can be dangerous for residents of a building if it leaves them without access to heating. Thus I believe it may be prudent to exercise a small amount of leniency when considering which shutoffs to perform that we may not be able to account for through analytics.
