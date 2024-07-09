@@ -18,6 +18,8 @@ Not allowed to share the contents of this course due to NDA. However, we are all
 #### [Capstone Project](https://github.com/kuehbiko/03-Coursework/tree/main/Heicoders%20Academy%20AI200%20Applied%20Machine%20Learning/Capstone%20Project)
 **Languages:** Python
 
+## Aug | 
+
 
 ## Jul - Sep | [Google Advanced Data Analytics](https://github.com/kuehbiko/03-Coursework/tree/main/Google%20Advanced%20Data%20Analytics)
 #### Capstone Project
