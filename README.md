@@ -2,7 +2,7 @@
 # 2024
 ## Aug - | [ISYE6740 Computational Data Analysis](https://github.com/kuehbiko/03-Coursework/tree/main/Analytics%20Essential%20Tools%20and%20Methods%20MicroMasters/ISYE6740%20Computational%20Data%20Analytics)
 
-## May - Jul | ISYE6501 Introduction to Analytics Modeling (Summer '24)
+## May - Jul | [ISYE6501 Introduction to Analytics Modeling (Summer '24)](https://github.com/kuehbiko/03-Coursework/tree/main/Analytics%20Essential%20Tools%20and%20Methods%20MicroMasters/ISYE6501%20Introduction%20to%20Analytics%20Modelling)
 **Languages:** R, Python
 
 ## Feb - May | BCG RISE 2.0 for Financial Services
