@@ -3,7 +3,7 @@
 ## Jan - May | MGT6203 Data Analytics for Business
 
 # 2024
-## Dec | PL-300
+## Dec | PL-300 Microsoft Power BI Data Analyst Associate
 
 ## Aug - Dec | [CSE6040 Computing for Data Analysis]()
 **Languages:** Python
