@@ -19,7 +19,7 @@
 **Languages:** Python
 
 # 2023
-## Sep - Oct | [AI200 Applied Machine Learning]()
+## Sep - Oct | [AI200 Applied Machine Learning](https://github.com/kuehbiko/AI200-Applied-Machine-Learning)
 #### [Capstone Project]()
 **Languages:** Python
 
