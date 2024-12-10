@@ -1,14 +1,14 @@
 # Contents
 # 2025
-## Jan - May | MGT6203 Data Analytics for Business
+### Jan - May | MGT6203 Data Analytics for Business
 
 # 2024
-## Dec | PL-300 Microsoft Power BI Data Analyst Associate
+### Dec | PL-300 Microsoft Power BI Data Analyst Associate
 
-## Aug - Dec | [CSE6040 Computing for Data Analysis]()
+### Aug - Dec | [CSE6040 Computing for Data Analysis]()
 **Languages:** Python
 
-## May - Jul | [ISYE6501 Introduction to Analytics Modeling]()
+### May - Jul | [ISYE6501 Introduction to Analytics Modeling]()
 **Languages:** R, Python
 
 ## Feb - May | [BCG RISE 2.0 for Financial Services]()
