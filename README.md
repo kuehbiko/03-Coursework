@@ -11,22 +11,22 @@
 ### May - Jul | [ISYE6501 Introduction to Analytics Modeling]()
 **Languages:** R, Python
 
-## Feb - May | [BCG RISE 2.0 for Financial Services]()
+### Feb - May | [BCG RISE 2.0 for Financial Services]()
 #### [Capstone Project]()
 **Languages:** Python, MS SQL
 
-## Feb - May | [CS50P Introduction to Programming with Python]()
+### Feb - May | [CS50P Introduction to Programming with Python]()
 **Languages:** Python
 
 # 2023
-## Sep - Oct | [AI200 Applied Machine Learning](https://github.com/kuehbiko/AI200-Applied-Machine-Learning)
+### Sep - Oct | [AI200 Applied Machine Learning](https://github.com/kuehbiko/AI200-Applied-Machine-Learning)
 #### [Capstone Project]()
 **Languages:** Python
 
-## Aug | [Statistics for Data Science and Business Analytics]()
+### Aug | [Statistics for Data Science and Business Analytics]()
 
-## Jul - Sep | [Google Advanced Data Analytics]()
+### Jul - Sep | [Google Advanced Data Analytics]()
 **Languages:** Python
 
-## May - Jun | [Google Data Analytics]()
+### May - Jun | [Google Data Analytics]()
 **Languages:** R, MySQL
